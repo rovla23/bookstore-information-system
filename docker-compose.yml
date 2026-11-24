@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: bookstore_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bookstore_user
+      POSTGRES_PASSWORD: bookstore_pass
+      POSTGRES_DB: bookstore
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookstore_user -d bookstore"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - bookstore_net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bookstore_app
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://bookstore_user:bookstore_pass@db:5432/bookstore
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - bookstore_net
+
+networks:
+  bookstore_net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  

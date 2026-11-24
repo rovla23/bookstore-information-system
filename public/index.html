@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Книжковий магазин — інформаційна система</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet">
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #f4f6f9;
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+    }
+    .card {
+      border: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    .table thead th {
+      white-space: nowrap;
+    }
+    .actions-col {
+      width: 1%;
+      white-space: nowrap;
+    }
+    .auth-wrapper {
+      min-height: 100vh;
+    }
+    .auth-card {
+      max-width: 480px;
+      width: 100%;
+    }
+    .stat-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+    }
+    .notif-panel {
+      width: 360px;
+      max-width: 92vw;
+    }
+    .notif-list {
+      max-height: 340px;
+      overflow-y: auto;
+    }
+    .notif-item + .notif-item {
+      border-top: 1px solid #eef0f3;
+    }
+    .nav-tabs .nav-link {
+      font-weight: 500;
+    }
+    .order-row {
+      background: #fbfcfe;
+    }
+    .isbn-cell {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .author-link {
+      color: inherit;
+      text-align: left;
+      vertical-align: baseline;
+      cursor: pointer;
+    }
+    .author-link .bi {
+      font-size: 0.8rem;
+      opacity: 0.75;
+    }
+    .author-link:hover,
+    .author-link:focus-visible {
+      color: var(--bs-primary);
+    }
+    .author-link:hover .bi,
+    .author-link:focus-visible .bi {
+      opacity: 1;
+    }
+    .author-bio {
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ======================================================= -->
+  <!-- Екран авторизації                                       -->
+  <!-- ======================================================= -->
+  <div id="authScreen" class="auth-wrapper gradient-bg d-none align-items-center justify-content-center p-3">
+    <div class="card auth-card">
+      <div class="card-body p-4 p-md-5">
+        <div class="text-center mb-4">
+          <i class="bi bi-book-half text-primary" style="font-size: 3rem;"></i>
+          <h1 class="h4 mt-2 mb-1">Книжковий магазин</h1>
+          <p class="text-muted mb-0">Увійдіть або створіть обліковий запис</p>
+        </div>
+
+        <ul class="nav nav-pills nav-fill mb-4" id="authTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="loginTabBtn" data-bs-toggle="pill"
+                    data-bs-target="#loginPane" type="button" role="tab">Вхід</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="registerTabBtn" data-bs-toggle="pill"
+                    data-bs-target="#registerPane" type="button" role="tab">Реєстрація</button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+
+          <!-- Вхід -->
+          <div class="tab-pane fade show active" id="loginPane" role="tabpanel">
+            <form id="loginForm" novalidate>
+              <div class="mb-3">
+                <label for="loginUsername" class="form-label">Логін</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-person"></i></span>
+                  <input type="text" class="form-control" id="loginUsername"
+                         autocomplete="username" required>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="loginPassword" class="form-label">Пароль</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                  <input type="password" class="form-control" id="loginPassword"
+                         autocomplete="current-password" required>
+                </div>
+              </div>
+              <div class="alert alert-danger py-2 d-none" id="loginError"></div>
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                  <i class="bi bi-box-arrow-in-right me-1"></i>Увійти
+                </button>
+              </div>
+              <p class="text-muted small text-center mt-3 mb-0">
+                Тестовий акаунт: <code>admin</code> / <code>admin123</code>
+              </p>
+            </form>
+          </div>
+
+          <!-- Реєстрація -->
+          <div class="tab-pane fade" id="registerPane" role="tabpanel">
+            <form id="registerForm" novalidate>
+              <div class="mb-3">
+                <label for="regUsername" class="form-label">Логін</label>
+                <input type="text" class="form-control" id="regUsername"
+                       minlength="3" maxlength="30" pattern="[A-Za-z0-9_.\-]{3,30}"
+                       autocomplete="username" required>
+                <div class="form-text">3–30 символів: латиниця, цифри, . _ -</div>
+              </div>
+              <div class="mb-3">
+                <label for="regPassword" class="form-label">Пароль</label>
+                <input type="password" class="form-control" id="regPassword"
+                       minlength="6" maxlength="72" autocomplete="new-password" required>
+                <div class="form-text">Не менше 6 символів</div>
+              </div>
+              <div class="mb-3">
+                <label for="regPassword2" class="form-label">Повторіть пароль</label>
+                <input type="password" class="form-control" id="regPassword2"
+                       autocomplete="new-password" required>
+                <div class="invalid-feedback">Паролі не збігаються</div>
+              </div>
+              <div class="alert alert-danger py-2 d-none" id="registerError"></div>
+              <div class="d-grid">
+                <button type="submit" class="btn btn-success" id="registerBtn">
+                  <i class="bi bi-person-plus me-1"></i>Зареєструватися
+                </button>
+              </div>
+              <p class="text-muted small text-center mt-3 mb-0">
+                Новий обліковий запис отримує роль «Менеджер».
+              </p>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- Головна панель                                          -->
+  <!-- ======================================================= -->
+  <div id="appScreen" class="d-none">
+
+    <header class="gradient-bg text-white py-3 mb-4 shadow">
+      <div class="container d-flex align-items-center flex-wrap gap-2">
+        <i class="bi bi-book-half fs-1 me-3"></i>
+        <div class="me-auto">
+          <h1 class="h4 mb-0">Інформаційна система книжкового магазину</h1>
+          <small class="opacity-75">Облік книг, клієнтів та замовлень</small>
+        </div>
+
+        <!-- Сповіщення -->
+        <div class="dropdown" id="notifDropdown">
+          <button type="button" class="btn btn-light position-relative" id="bellBtn"
+                  data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                  aria-expanded="false" title="Сповіщення">
+            <i class="bi bi-bell-fill"></i>
+            <span id="notifBadge"
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end p-0 shadow notif-panel">
+            <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+              <h2 class="h6 mb-0"><i class="bi bi-bell me-2"></i>Сповіщення</h2>
+              <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" id="clearNotifBtn">
+                Очистити
+              </button>
+            </div>
+            <div class="notif-list" id="notifList"></div>
+          </div>
+        </div>
+
+        <!-- Користувач -->
+        <div class="d-flex align-items-center gap-2 ms-2">
+          <i class="bi bi-person-circle text-white-50 d-none d-md-inline"></i>
+          <span id="userName" class="fw-semibold d-none d-md-inline"></span>
+          <span id="userRole" class="badge text-bg-light d-none d-md-inline"></span>
+          <button type="button" class="btn btn-outline-light btn-sm" id="logoutBtn">
+            <i class="bi bi-box-arrow-right me-1"></i>Вийти
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container pb-5">
+
+      <!-- Статистика -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+              <div class="stat-icon bg-primary-subtle text-primary me-3"><i class="bi bi-journal-bookmark"></i></div>
+              <div>
+                <div class="text-muted small">Всього книг</div>
+                <div class="fs-3 fw-bold" id="statBooks">—</div>
+                <div class="text-muted small" id="statBooksSub">&nbsp;</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+              <div class="stat-icon bg-success-subtle text-success me-3"><i class="bi bi-cash-coin"></i></div>
+              <div>
+                <div class="text-muted small">Загальна вартість на складі</div>
+                <div class="fs-3 fw-bold" id="statValue">—</div>
+                <div class="text-muted small">грн</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+              <div class="stat-icon bg-warning-subtle text-warning-emphasis me-3"><i class="bi bi-cart-check"></i></div>
+              <div>
+                <div class="text-muted small">Кількість замовлень</div>
+                <div class="fs-3 fw-bold" id="statOrders">—</div>
+                <div class="text-muted small" id="statOrdersSub">&nbsp;</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Вкладки -->
+      <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="booksTabBtn" data-bs-toggle="tab"
+                  data-bs-target="#booksPane" type="button" role="tab">
+            <i class="bi bi-book me-1"></i>Книги
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="ordersTabBtn" data-bs-toggle="tab"
+                  data-bs-target="#ordersPane" type="button" role="tab">
+            <i class="bi bi-cart3 me-1"></i>Замовлення
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+
+        <!-- ================= Книги ================= -->
+        <div class="tab-pane fade show active" id="booksPane" role="tabpanel">
+          <div class="row g-4">
+
+            <!-- Форма додавання / редагування -->
+            <div class="col-lg-4">
+              <div class="card">
+                <div class="card-header bg-white py-3">
+                  <h2 class="h5 mb-0" id="formTitle">
+                    <i class="bi bi-plus-circle text-primary me-2"></i>Додати книгу
+                  </h2>
+                </div>
+                <div class="card-body">
+                  <form id="bookForm" novalidate>
+                    <input type="hidden" id="bookId">
+
+                    <div class="mb-3">
+                      <label for="title" class="form-label">Назва</label>
+                      <input type="text" class="form-control" id="title"
+                             maxlength="200" required placeholder="Введіть назву книги">
+                    </div>
+
+                    <div class="row">
+                      <div class="col-7 mb-3">
+                        <label for="isbn" class="form-label">ISBN</label>
+                        <input type="text" class="form-control" id="isbn"
+                               maxlength="17" required placeholder="978-966-10-0001-1"
+                               pattern="[0-9Xx\-]{10,17}">
+                        <div class="invalid-feedback">10 або 13 цифр, допускаються дефіси</div>
+                      </div>
+                      <div class="col-5 mb-3">
+                        <label for="year" class="form-label">Рік видання</label>
+                        <input type="number" class="form-control" id="year"
+                               min="1450" step="1" required placeholder="2024">
+                        <div class="invalid-feedback">Вкажіть коректний рік</div>
+                      </div>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="authorId" class="form-label">Автор</label>
+                      <div class="input-group">
+                        <select class="form-select" id="authorId" required>
+                          <option value="">— Оберіть автора —</option>
+                        </select>
+                        <button type="button" class="btn btn-outline-primary" id="newAuthorBtn"
+                                title="Додати нового автора" aria-label="Додати нового автора">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                      </div>
+                      <small class="text-muted d-block mt-1" id="authorHint">
+                        Оберіть автора, щоб побачити його країну
+                      </small>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="genreId" class="form-label">Жанр</label>
+                      <select class="form-select" id="genreId" required>
+                        <option value="">— Оберіть жанр —</option>
+                      </select>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-6 mb-3">
+                        <label for="price" class="form-label">Ціна, грн</label>
+                        <input type="number" class="form-control" id="price"
+                               min="0" step="0.01" required placeholder="0.00">
+                      </div>
+                      <div class="col-6 mb-3">
+                        <label for="quantity" class="form-label">Кількість</label>
+                        <input type="number" class="form-control" id="quantity"
+                               min="0" step="1" required placeholder="0">
+                      </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                      <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="bi bi-check-lg me-1"></i>Зберегти
+                      </button>
+                      <button type="button" class="btn btn-outline-secondary d-none" id="cancelBtn">
+                        <i class="bi bi-x-lg me-1"></i>Скасувати редагування
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Пошук і таблиця -->
+            <div class="col-lg-8">
+              <div class="card">
+                <div class="card-header bg-white py-3">
+                  <div class="row g-2 align-items-center">
+                    <div class="col-md-5">
+                      <h2 class="h5 mb-0">
+                        <i class="bi bi-list-ul text-primary me-2"></i>Каталог книг
+                        <span class="badge bg-secondary ms-1" id="countBadge">0</span>
+                      </h2>
+                    </div>
+                    <div class="col-md-7">
+                      <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="search" class="form-control" id="searchInput"
+                               placeholder="Пошук за назвою, ISBN, автором або жанром..."
+                               autocomplete="off">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>ISBN</th>
+                        <th>Назва</th>
+                        <th>Автор</th>
+                        <th>Жанр</th>
+                        <th class="text-end">Ціна, грн</th>
+                        <th class="text-end">Кількість</th>
+                        <th class="actions-col text-end">Дії</th>
+                      </tr>
+                    </thead>
+                    <tbody id="booksTableBody">
+                      <tr>
+                        <td colspan="7" class="text-center text-muted py-4">Завантаження...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ================= Замовлення ================= -->
+        <div class="tab-pane fade" id="ordersPane" role="tabpanel">
+          <div class="row g-4">
+
+            <!-- Форма оформлення -->
+            <div class="col-lg-4">
+              <div class="card">
+                <div class="card-header bg-white py-3">
+                  <h2 class="h5 mb-0">
+                    <i class="bi bi-cart-plus text-primary me-2"></i>Нове замовлення
+                  </h2>
+                </div>
+                <div class="card-body">
+                  <form id="orderForm" novalidate>
+                    <div class="mb-3">
+                      <label for="orderCustomer" class="form-label">Клієнт</label>
+                      <div class="input-group">
+                        <select class="form-select" id="orderCustomer" required>
+                          <option value="">— Оберіть клієнта —</option>
+                        </select>
+                        <button type="button" class="btn btn-outline-primary" id="newCustomerBtn"
+                                title="Додати нового клієнта">
+                          <i class="bi bi-person-plus"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <label class="form-label">Позиції замовлення</label>
+                    <div id="orderItems"></div>
+
+                    <button type="button" class="btn btn-sm btn-outline-secondary mb-3" id="addItemBtn">
+                      <i class="bi bi-plus-lg me-1"></i>Додати позицію
+                    </button>
+
+                    <div class="d-flex justify-content-between align-items-center bg-light rounded p-3 mb-3">
+                      <span class="text-muted">Разом до сплати:</span>
+                      <span class="fs-5 fw-bold" id="orderTotal">0,00 грн</span>
+                    </div>
+
+                    <div class="d-grid">
+                      <button type="submit" class="btn btn-success" id="orderBtn">
+                        <i class="bi bi-bag-check me-1"></i>Оформити замовлення
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Список замовлень -->
+            <div class="col-lg-8">
+              <div class="card">
+                <div class="card-header bg-white py-3">
+                  <h2 class="h5 mb-0">
+                    <i class="bi bi-receipt text-primary me-2"></i>Історія замовлень
+                    <span class="badge bg-secondary ms-1" id="ordersCountBadge">0</span>
+                  </h2>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>№</th>
+                        <th>Дата</th>
+                        <th>Клієнт</th>
+                        <th>Позиції</th>
+                        <th>Статус</th>
+                        <th class="text-end">Сума, грн</th>
+                      </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                      <tr>
+                        <td colspan="6" class="text-center text-muted py-4">Завантаження...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- Модальне вікно: інформація про автора                   -->
+  <!-- ======================================================= -->
+  <div class="modal fade" id="authorModal" tabindex="-1" aria-labelledby="authorModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="authorModalTitle">
+            <i class="bi bi-person-lines-fill text-primary me-2"></i><span id="authorModalName"></span>
+          </h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-uppercase text-muted small fw-semibold mb-1">Країна походження</div>
+          <p class="mb-3" id="authorModalCountry"></p>
+
+          <div class="text-uppercase text-muted small fw-semibold mb-1">Біографія</div>
+          <p class="mb-0 author-bio" id="authorModalBio"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрити</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- Модальне вікно: додати автора                           -->
+  <!-- ======================================================= -->
+  <div class="modal fade" id="newAuthorModal" tabindex="-1" aria-labelledby="newAuthorModalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="newAuthorForm" novalidate>
+          <div class="modal-header">
+            <h2 class="modal-title h5" id="newAuthorModalTitle">
+              <i class="bi bi-person-plus text-primary me-2"></i>Додати автора
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-sm-6 mb-3">
+                <label for="newAuthorFirstName" class="form-label">Ім'я</label>
+                <input type="text" class="form-control" id="newAuthorFirstName" maxlength="80" required>
+                <div class="invalid-feedback">Вкажіть ім'я</div>
+              </div>
+              <div class="col-sm-6 mb-3">
+                <label for="newAuthorLastName" class="form-label">Прізвище</label>
+                <input type="text" class="form-control" id="newAuthorLastName" maxlength="80" required>
+                <div class="invalid-feedback">Вкажіть прізвище</div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="newAuthorCountry" class="form-label">Країна</label>
+              <input type="text" class="form-control" id="newAuthorCountry" maxlength="100" required
+                     placeholder="Наприклад, Україна">
+              <div class="invalid-feedback">Вкажіть країну</div>
+            </div>
+            <div class="mb-3">
+              <label for="newAuthorBio" class="form-label">
+                Біографія <span class="text-muted">(необов'язково)</span>
+              </label>
+              <textarea class="form-control" id="newAuthorBio" rows="4" maxlength="5000"></textarea>
+            </div>
+            <div class="alert alert-danger py-2 mb-0 d-none" id="newAuthorError"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Скасувати</button>
+            <button type="submit" class="btn btn-primary" id="saveAuthorBtn">
+              <i class="bi bi-check-lg me-1"></i>Зберегти автора
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- Модальне вікно: новий клієнт                            -->
+  <!-- ======================================================= -->
+  <div class="modal fade" id="customerModal" tabindex="-1" aria-labelledby="customerModalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="customerForm" novalidate>
+          <div class="modal-header">
+            <h2 class="modal-title h5" id="customerModalTitle">
+              <i class="bi bi-person-plus text-primary me-2"></i>Новий клієнт
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="custName" class="form-label">Повне ім'я</label>
+              <input type="text" class="form-control" id="custName" maxlength="150" required>
+            </div>
+            <div class="row">
+              <div class="col-sm-6 mb-3">
+                <label for="custPhone" class="form-label">Телефон</label>
+                <input type="tel" class="form-control" id="custPhone" maxlength="20" required
+                       placeholder="+380501234567" pattern="\+?[0-9\s\-\(\)]{7,20}">
+                <div class="invalid-feedback">Вкажіть коректний номер</div>
+              </div>
+              <div class="col-sm-6 mb-3">
+                <label for="custEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="custEmail" maxlength="150" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="custAddress" class="form-label">Адреса</label>
+              <input type="text" class="form-control" id="custAddress" maxlength="255" required>
+            </div>
+            <div class="alert alert-danger py-2 mb-0 d-none" id="customerError"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Скасувати</button>
+            <button type="submit" class="btn btn-primary" id="saveCustomerBtn">
+              <i class="bi bi-check-lg me-1"></i>Зберегти клієнта
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast-сповіщення (спільне для обох екранів) -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="appToast" class="toast align-items-center border-0" role="alert"
+         aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="toastBody"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                data-bs-dismiss="toast" aria-label="Закрити"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const API_URL = '/api';
+      const TOKEN_KEY = 'bookstore_token';
+
+      // ---------------------------------------------------------------
+      // Елементи DOM
+      // ---------------------------------------------------------------
+
+      const $ = (id) => document.getElementById(id);
+
+      const authScreen = $('authScreen');
+      const appScreen = $('appScreen');
+
+      const loginForm = $('loginForm');
+      const loginUsername = $('loginUsername');
+      const loginPassword = $('loginPassword');
+      const loginError = $('loginError');
+      const loginBtn = $('loginBtn');
+
+      const registerForm = $('registerForm');
+      const registerError = $('registerError');
+      const registerBtn = $('registerBtn');
+      const regUsername = $('regUsername');
+      const regPassword = $('regPassword');
+      const regPassword2 = $('regPassword2');
+
+      const userName = $('userName');
+      const userRole = $('userRole');
+      const logoutBtn = $('logoutBtn');
+
+      const statBooks = $('statBooks');
+      const statBooksSub = $('statBooksSub');
+      const statValue = $('statValue');
+      const statOrders = $('statOrders');
+      const statOrdersSub = $('statOrdersSub');
+
+      const bookForm = $('bookForm');
+      const formTitle = $('formTitle');
+      const bookIdInput = $('bookId');
+      const titleInput = $('title');
+      const isbnInput = $('isbn');
+      const yearInput = $('year');
+      const authorSelect = $('authorId');
+      const authorHint = $('authorHint');
+      const genreSelect = $('genreId');
+      const priceInput = $('price');
+      const quantityInput = $('quantity');
+      const submitBtn = $('submitBtn');
+      const cancelBtn = $('cancelBtn');
+      const searchInput = $('searchInput');
+      const booksTableBody = $('booksTableBody');
+      const countBadge = $('countBadge');
+
+      const authorModal = new bootstrap.Modal($('authorModal'));
+      const authorModalName = $('authorModalName');
+      const authorModalCountry = $('authorModalCountry');
+      const authorModalBio = $('authorModalBio');
+
+      const newAuthorBtn = $('newAuthorBtn');
+      const newAuthorModalEl = $('newAuthorModal');
+      const newAuthorModal = new bootstrap.Modal(newAuthorModalEl);
+      const newAuthorForm = $('newAuthorForm');
+      const newAuthorFirstName = $('newAuthorFirstName');
+      const newAuthorLastName = $('newAuthorLastName');
+      const newAuthorCountry = $('newAuthorCountry');
+      const newAuthorBio = $('newAuthorBio');
+      const newAuthorError = $('newAuthorError');
+      const saveAuthorBtn = $('saveAuthorBtn');
+
+      const orderForm = $('orderForm');
+      const orderCustomer = $('orderCustomer');
+      const newCustomerBtn = $('newCustomerBtn');
+      const orderItems = $('orderItems');
+      const addItemBtn = $('addItemBtn');
+      const orderTotal = $('orderTotal');
+      const orderBtn = $('orderBtn');
+      const ordersTableBody = $('ordersTableBody');
+      const ordersCountBadge = $('ordersCountBadge');
+
+      const customerModalEl = $('customerModal');
+      const customerModal = new bootstrap.Modal(customerModalEl);
+      const customerForm = $('customerForm');
+      const custName = $('custName');
+      const custPhone = $('custPhone');
+      const custEmail = $('custEmail');
+      const custAddress = $('custAddress');
+      const customerError = $('customerError');
+      const saveCustomerBtn = $('saveCustomerBtn');
+
+      const notifDropdown = $('notifDropdown');
+      const notifBadge = $('notifBadge');
+      const notifList = $('notifList');
+      const clearNotifBtn = $('clearNotifBtn');
+
+      const toastEl = $('appToast');
+      const toastBody = $('toastBody');
+      const toast = new bootstrap.Toast(toastEl, { delay: 3500 });
+
+      yearInput.max = new Date().getFullYear() + 1;
+
+      // ---------------------------------------------------------------
+      // Стан
+      // ---------------------------------------------------------------
+
+      let token = localStorage.getItem(TOKEN_KEY);
+      let currentUser = null;
+
+      let allBooks = [];
+      let books = [];
+      let orders = [];
+      let customers = [];
+      let authors = [];
+      let lowStock = [];
+      let searchTimer = null;
+
+      // Сповіщення
+      let eventLog = [];          // події поточної сесії
+      let derived = [];           // сповіщення, обчислені з даних (залишки, замовлення)
+      const dismissed = new Set();
+      const seen = new Set();
+
+      const ROLE_LABELS = { admin: 'Адміністратор', manager: 'Менеджер' };
+
+      const STATUS_LABELS = {
+        new: ['Нове', 'text-bg-primary'],
+        processing: ['В обробці', 'text-bg-warning'],
+        shipped: ['Відправлено', 'text-bg-info'],
+        completed: ['Виконано', 'text-bg-success'],
+        cancelled: ['Скасовано', 'text-bg-secondary'],
+      };
+
+      // ---------------------------------------------------------------
+      // Утиліти
+      // ---------------------------------------------------------------
+
+      function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value === null || value === undefined ? '' : String(value);
+        return div.innerHTML;
+      }
+
+      function formatPrice(value) {
+        return Number(value).toLocaleString('uk-UA', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+
+      function formatDate(value) {
+        return new Date(value).toLocaleString('uk-UA', {
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit',
+        });
+      }
+
+      function isAdmin() {
+        return Boolean(currentUser && currentUser.role === 'admin');
+      }
+
+      function bookById(id) {
+        return allBooks.find((b) => String(b.id) === String(id)) || null;
+      }
+
+      function authorById(id) {
+        return authors.find((a) => String(a.id) === String(id)) || null;
+      }
+
+      function showToast(message, type) {
+        toastEl.classList.remove('text-bg-success', 'text-bg-danger');
+        toastEl.classList.add(type === 'error' ? 'text-bg-danger' : 'text-bg-success');
+        toastBody.textContent = message;
+        toast.show();
+      }
+
+      function showInlineError(el, message) {
+        el.textContent = message;
+        el.classList.remove('d-none');
+      }
+
+      function hideInlineError(el) {
+        el.textContent = '';
+        el.classList.add('d-none');
+      }
+
+      async function request(url, options, skipAuthRedirect) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers.Authorization = 'Bearer ' + token;
+        }
+
+        const response = await fetch(url, { ...(options || {}), headers });
+
+        let data = null;
+        try {
+          data = await response.json();
+        } catch (e) {
+          data = null;
+        }
+
+        if (response.status === 401 && !skipAuthRedirect) {
+          resetSession();
+          showAuth();
+          throw new Error((data && data.error) || 'Сесію завершено. Увійдіть знову.');
+        }
+
+        if (!response.ok) {
+          const message = data && data.error ? data.error : `Помилка запиту (${response.status})`;
+          throw new Error(message);
+        }
+        return data;
+      }
+
+      // ---------------------------------------------------------------
+      // Перемикання екранів та сесія
+      // ---------------------------------------------------------------
+
+      function showAuth() {
+        appScreen.classList.add('d-none');
+        authScreen.classList.remove('d-none');
+        authScreen.classList.add('d-flex');
+      }
+
+      function showApp() {
+        authScreen.classList.add('d-none');
+        authScreen.classList.remove('d-flex');
+        appScreen.classList.remove('d-none');
+      }
+
+      function resetSession() {
+        token = null;
+        currentUser = null;
+        localStorage.removeItem(TOKEN_KEY);
+
+        allBooks = [];
+        books = [];
+        orders = [];
+        customers = [];
+        authors = [];
+        lowStock = [];
+        eventLog = [];
+        derived = [];
+        dismissed.clear();
+        seen.clear();
+
+        searchInput.value = '';
+        resetBookForm();
+        resetOrderForm();
+        renderNotifications();
+      }
+
+      async function enterApp(user) {
+        currentUser = user;
+        userName.textContent = user.username;
+        userRole.textContent = ROLE_LABELS[user.role] || user.role;
+        showApp();
+
+        resetOrderForm();
+        await loadReferences();
+        await refreshData();
+      }
+
+      async function handleAuthSuccess(data) {
+        token = data.token;
+        localStorage.setItem(TOKEN_KEY, token);
+        await enterApp(data.user);
+      }
+
+      async function handleLogout() {
+        if (token) {
+          request(`${API_URL}/logout`, { method: 'POST' }, true).catch(() => {});
+        }
+        resetSession();
+        loginForm.reset();
+        registerForm.reset();
+        loginForm.classList.remove('was-validated');
+        registerForm.classList.remove('was-validated');
+        hideInlineError(loginError);
+        hideInlineError(registerError);
+        bootstrap.Tab.getOrCreateInstance($('loginTabBtn')).show();
+        bootstrap.Tab.getOrCreateInstance($('booksTabBtn')).show();
+        showAuth();
+      }
+
+      // ---------------------------------------------------------------
+      // Авторизація: вхід
+      // ---------------------------------------------------------------
+
+      async function handleLogin(event) {
+        event.preventDefault();
+        hideInlineError(loginError);
+
+        if (!loginForm.checkValidity()) {
+          loginForm.classList.add('was-validated');
+          return;
+        }
+
+        loginBtn.disabled = true;
+        try {
+          const data = await request(`${API_URL}/login`, {
+            method: 'POST',
+            body: JSON.stringify({
+              username: loginUsername.value.trim(),
+              password: loginPassword.value,
+            }),
+          }, true);
+
+          loginForm.reset();
+          loginForm.classList.remove('was-validated');
+          await handleAuthSuccess(data);
+        } catch (err) {
+          showInlineError(loginError, err.message);
+        } finally {
+          loginBtn.disabled = false;
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Авторизація: реєстрація
+      // ---------------------------------------------------------------
+
+      function checkPasswordMatch() {
+        regPassword2.setCustomValidity(
+          regPassword.value === regPassword2.value ? '' : 'Паролі не збігаються'
+        );
+      }
+
+      async function handleRegister(event) {
+        event.preventDefault();
+        hideInlineError(registerError);
+        checkPasswordMatch();
+
+        if (!registerForm.checkValidity()) {
+          registerForm.classList.add('was-validated');
+          return;
+        }
+
+        registerBtn.disabled = true;
+        try {
+          const data = await request(`${API_URL}/register`, {
+            method: 'POST',
+            body: JSON.stringify({
+              username: regUsername.value.trim(),
+              password: regPassword.value,
+            }),
+          }, true);
+
+          registerForm.reset();
+          registerForm.classList.remove('was-validated');
+          await handleAuthSuccess(data);
+          showToast('Реєстрація успішна. Ласкаво просимо!', 'success');
+        } catch (err) {
+          showInlineError(registerError, err.message);
+        } finally {
+          registerBtn.disabled = false;
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Сповіщення
+      // ---------------------------------------------------------------
+
+      const NOTIF_ICONS = {
+        success: 'bi-check-circle-fill text-success',
+        warning: 'bi-exclamation-triangle-fill text-warning',
+        danger: 'bi-x-octagon-fill text-danger',
+        info: 'bi-info-circle-fill text-primary',
+      };
+
+      function currentNotifications() {
+        return eventLog.concat(derived.filter((n) => !dismissed.has(n.key)));
+      }
+
+      function addEvent(type, text) {
+        eventLog.unshift({
+          key: 'evt-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+          type,
+          text,
+          time: new Date(),
+        });
+        if (eventLog.length > 30) {
+          eventLog.length = 30;
+        }
+        renderNotifications();
+      }
+
+      function rebuildDerivedNotifications() {
+        derived = [];
+
+        lowStock.forEach((book) => {
+          const empty = book.stock_quantity === 0;
+          derived.push({
+            key: `low-${book.id}-${book.stock_quantity}`,
+            type: empty ? 'danger' : 'warning',
+            text: empty
+              ? `«${book.title}» закінчилась на складі`
+              : `«${book.title}»: залишилось ${book.stock_quantity} шт.`,
+            time: null,
+          });
+        });
+
+        orders.slice(0, 3).forEach((order) => {
+          derived.push({
+            key: `order-${order.id}`,
+            type: 'info',
+            text: `Замовлення №${order.id}: ${order.customer_name} — ${formatPrice(order.total_amount)} грн`,
+            time: new Date(order.order_date),
+          });
+        });
+
+        renderNotifications();
+      }
+
+      function renderNotifications() {
+        const items = currentNotifications();
+        const unread = items.filter((n) => !seen.has(n.key)).length;
+
+        notifBadge.textContent = unread > 99 ? '99+' : unread;
+        notifBadge.classList.toggle('d-none', unread === 0);
+
+        if (items.length === 0) {
+          notifList.innerHTML =
+            '<div class="text-center text-muted py-4 px-3">' +
+            '<i class="bi bi-bell-slash fs-3 d-block mb-1"></i>Нових сповіщень немає</div>';
+          return;
+        }
+
+        notifList.innerHTML = items.map((n) => `
+          <div class="notif-item d-flex px-3 py-2 ${seen.has(n.key) ? '' : 'bg-primary-subtle'}">
+            <i class="bi ${NOTIF_ICONS[n.type] || NOTIF_ICONS.info} me-2 mt-1"></i>
+            <div class="small">
+              <div>${escapeHtml(n.text)}</div>
+              ${n.time ? `<div class="text-muted">${escapeHtml(formatDate(n.time))}</div>` : ''}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      notifDropdown.addEventListener('shown.bs.dropdown', () => {
+        // Список ще показує підсвічені непрочитані; бейдж скидаємо одразу
+        currentNotifications().forEach((n) => seen.add(n.key));
+        notifBadge.classList.add('d-none');
+      });
+
+      notifDropdown.addEventListener('hidden.bs.dropdown', renderNotifications);
+
+      clearNotifBtn.addEventListener('click', () => {
+        derived.forEach((n) => dismissed.add(n.key));
+        eventLog = [];
+        renderNotifications();
+      });
+
+      // ---------------------------------------------------------------
+      // Довідники та статистика
+      // ---------------------------------------------------------------
+
+      function fillCustomerSelect(selectedId) {
+        const previous = selectedId !== undefined ? String(selectedId) : orderCustomer.value;
+
+        orderCustomer.innerHTML = '<option value="">— Оберіть клієнта —</option>' +
+          customers.map((c) =>
+            `<option value="${c.id}">${escapeHtml(c.full_name)} (${escapeHtml(c.phone)})</option>`
+          ).join('');
+
+        orderCustomer.value = customers.some((c) => String(c.id) === previous) ? previous : '';
+      }
+
+      async function loadCustomers(selectedId) {
+        customers = await request(`${API_URL}/customers`);
+        fillCustomerSelect(selectedId);
+      }
+
+      function fillAuthorSelect(selectedId) {
+        const previous = selectedId !== undefined ? String(selectedId) : authorSelect.value;
+
+        authorSelect.innerHTML = '<option value="">— Оберіть автора —</option>' +
+          authors.map((a) =>
+            `<option value="${a.id}">${escapeHtml(a.full_name)}</option>`
+          ).join('');
+
+        authorSelect.value = authors.some((a) => String(a.id) === previous) ? previous : '';
+        updateAuthorHint();
+      }
+
+      async function loadAuthors(selectedId) {
+        authors = await request(`${API_URL}/authors`);
+        fillAuthorSelect(selectedId);
+      }
+
+      async function loadReferences() {
+        try {
+          const [genres] = await Promise.all([
+            request(`${API_URL}/genres`),
+            loadAuthors(),
+            loadCustomers(),
+          ]);
+
+          genreSelect.innerHTML = '<option value="">— Оберіть жанр —</option>' +
+            genres.map((g) =>
+              `<option value="${g.id}">${escapeHtml(g.name)}</option>`
+            ).join('');
+        } catch (err) {
+          showToast('Не вдалося завантажити довідники: ' + err.message, 'error');
+        }
+      }
+
+      async function loadStats() {
+        try {
+          const stats = await request(`${API_URL}/stats`);
+          statBooks.textContent = stats.total_books;
+          statBooksSub.textContent = `${stats.total_copies} примірників на складі`;
+          statValue.textContent = formatPrice(stats.total_value);
+          statOrders.textContent = stats.orders_count;
+          statOrdersSub.textContent = `на суму ${formatPrice(stats.orders_revenue)} грн (без скасованих)`;
+
+          lowStock = stats.low_stock || [];
+          rebuildDerivedNotifications();
+        } catch (err) {
+          showToast('Не вдалося завантажити статистику: ' + err.message, 'error');
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Автор: підказка у формі та модальне вікно
+      // ---------------------------------------------------------------
+
+      function updateAuthorHint() {
+        const author = authorById(authorSelect.value);
+
+        if (!author) {
+          authorHint.textContent = 'Оберіть автора, щоб побачити його країну';
+          return;
+        }
+
+        authorHint.textContent = author.country
+          ? `Країна: ${author.country}`
+          : 'Країну не вказано';
+      }
+
+      function showAuthorInfo(bookId) {
+        const book = bookById(bookId) || books.find((b) => String(b.id) === String(bookId));
+        if (!book) {
+          return;
+        }
+
+        // Дані беремо з довідника авторів, а за його відсутності — з самої книги
+        const author = authorById(book.author_id);
+
+        authorModalName.textContent = book.author_name;
+        authorModalCountry.textContent =
+          (author && author.country) || book.author_country || 'Не вказано';
+
+        const bio = ((author && author.bio) || book.author_bio || '').trim();
+        authorModalBio.textContent = bio || 'Біографію не вказано';
+        authorModalBio.classList.toggle('text-muted', !bio);
+
+        authorModal.show();
+      }
+
+      // ---------------------------------------------------------------
+      // Новий автор (модальне вікно)
+      // ---------------------------------------------------------------
+
+      function openNewAuthorModal() {
+        newAuthorForm.reset();
+        newAuthorForm.classList.remove('was-validated');
+        hideInlineError(newAuthorError);
+        newAuthorModal.show();
+      }
+
+      async function handleNewAuthorSubmit(event) {
+        event.preventDefault();
+        hideInlineError(newAuthorError);
+
+        if (!newAuthorForm.checkValidity()) {
+          newAuthorForm.classList.add('was-validated');
+          return;
+        }
+
+        saveAuthorBtn.disabled = true;
+        try {
+          const author = await request(`${API_URL}/authors`, {
+            method: 'POST',
+            body: JSON.stringify({
+              first_name: newAuthorFirstName.value.trim(),
+              last_name: newAuthorLastName.value.trim(),
+              country: newAuthorCountry.value.trim(),
+              bio: newAuthorBio.value.trim(),
+            }),
+          });
+
+          // Оновлюємо список і одразу вибираємо створеного автора
+          await loadAuthors(author.id);
+          newAuthorModal.hide();
+          showToast(`Автора «${author.full_name}» додано`, 'success');
+          addEvent('success', `Додано нового автора «${author.full_name}»`);
+        } catch (err) {
+          showInlineError(newAuthorError, err.message);
+        } finally {
+          saveAuthorBtn.disabled = false;
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Книги
+      // ---------------------------------------------------------------
+
+      function renderBooks() {
+        countBadge.textContent = books.length;
+
+        if (books.length === 0) {
+          booksTableBody.innerHTML =
+            '<tr><td colspan="7" class="text-center text-muted py-4">' +
+            '<i class="bi bi-inbox fs-3 d-block mb-1"></i>Книг не знайдено</td></tr>';
+          return;
+        }
+
+        const admin = isAdmin();
+
+        booksTableBody.innerHTML = books.map((book) => `
+          <tr>
+            <td class="isbn-cell">${escapeHtml(book.isbn)}</td>
+            <td class="fw-semibold">
+              ${escapeHtml(book.title)}
+              <div class="text-muted small fw-normal">${escapeHtml(book.publication_year)} р.</div>
+            </td>
+            <td>
+              <button type="button" class="btn btn-link btn-sm p-0 border-0 text-decoration-none author-link"
+                      data-action="author" data-id="${book.id}"
+                      title="Інформація про автора"
+                      aria-label="Інформація про автора: ${escapeHtml(book.author_name)}">
+                ${escapeHtml(book.author_name)}
+                <i class="bi bi-info-circle ms-1"></i>
+              </button>
+            </td>
+            <td><span class="badge text-bg-light border">${escapeHtml(book.genre_name)}</span></td>
+            <td class="text-end">${formatPrice(book.price)}</td>
+            <td class="text-end">
+              <span class="badge ${book.stock_quantity > 0 ? 'text-bg-success' : 'text-bg-danger'}">
+                ${book.stock_quantity}
+              </span>
+            </td>
+            <td class="actions-col text-end">
+              <button type="button" class="btn btn-sm btn-outline-success me-1"
+                      data-action="order" data-id="${book.id}"
+                      ${book.stock_quantity === 0 ? 'disabled' : ''}>
+                <i class="bi bi-cart-plus"></i> Замовити
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                      data-action="edit" data-id="${book.id}">
+                <i class="bi bi-pencil-square"></i> Редагувати
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger"
+                      data-action="delete" data-id="${book.id}"
+                      ${admin ? '' : 'disabled title="Видаляти книги може лише адміністратор"'}>
+                <i class="bi bi-trash"></i> Видалити
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      async function loadAllBooks() {
+        allBooks = await request(`${API_URL}/books`);
+        rebuildRowOptions();
+      }
+
+      async function loadBooks() {
+        const search = searchInput.value.trim();
+
+        try {
+          if (search) {
+            books = await request(`${API_URL}/books?search=${encodeURIComponent(search)}`);
+          } else {
+            books = allBooks;
+          }
+          renderBooks();
+        } catch (err) {
+          booksTableBody.innerHTML =
+            '<tr><td colspan="7" class="text-center text-danger py-4">' +
+            'Помилка завантаження даних</td></tr>';
+          showToast(err.message, 'error');
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Форма книги
+      // ---------------------------------------------------------------
+
+      function resetBookForm() {
+        bookForm.reset();
+        bookForm.classList.remove('was-validated');
+        bookIdInput.value = '';
+        formTitle.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i>Додати книгу';
+        submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Зберегти';
+        cancelBtn.classList.add('d-none');
+        updateAuthorHint();
+      }
+
+      function startEdit(id) {
+        const book = bookById(id);
+        if (!book) {
+          return;
+        }
+
+        bookIdInput.value = book.id;
+        titleInput.value = book.title;
+        isbnInput.value = book.isbn;
+        yearInput.value = book.publication_year;
+        authorSelect.value = String(book.author_id);
+        genreSelect.value = String(book.genre_id);
+        priceInput.value = book.price;
+        quantityInput.value = book.stock_quantity;
+        updateAuthorHint();
+
+        formTitle.innerHTML = '<i class="bi bi-pencil-square text-warning me-2"></i>Редагування книги';
+        submitBtn.innerHTML = '<i class="bi bi-save me-1"></i>Оновити';
+        cancelBtn.classList.remove('d-none');
+
+        bookForm.classList.remove('was-validated');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        titleInput.focus();
+      }
+
+      async function handleBookSubmit(event) {
+        event.preventDefault();
+
+        if (!bookForm.checkValidity()) {
+          bookForm.classList.add('was-validated');
+          return;
+        }
+
+        const payload = {
+          title: titleInput.value.trim(),
+          isbn: isbnInput.value.trim(),
+          publication_year: Number(yearInput.value),
+          author_id: Number(authorSelect.value),
+          genre_id: Number(genreSelect.value),
+          price: Number(priceInput.value),
+          stock_quantity: Number(quantityInput.value),
+        };
+
+        const id = bookIdInput.value;
+        const isEdit = Boolean(id);
+
+        submitBtn.disabled = true;
+
+        try {
+          if (isEdit) {
+            await request(`${API_URL}/books/${id}`, {
+              method: 'PUT',
+              body: JSON.stringify(payload),
+            });
+            showToast('Книгу успішно оновлено', 'success');
+            addEvent('info', `Книгу «${payload.title}» оновлено`);
+          } else {
+            await request(`${API_URL}/books`, {
+              method: 'POST',
+              body: JSON.stringify(payload),
+            });
+            showToast('Книгу успішно додано', 'success');
+            addEvent('success', `Додано нову книгу «${payload.title}»`);
+          }
+
+          resetBookForm();
+          await refreshData();
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          submitBtn.disabled = false;
+        }
+      }
+
+      async function deleteBook(id) {
+        const book = bookById(id);
+        const name = book ? `«${book.title}»` : 'цю книгу';
+
+        if (!window.confirm(`Ви дійсно хочете видалити ${name}?`)) {
+          return;
+        }
+
+        try {
+          await request(`${API_URL}/books/${id}`, { method: 'DELETE' });
+          showToast('Книгу успішно видалено', 'success');
+          addEvent('warning', `Книгу ${name} видалено`);
+
+          if (bookIdInput.value === String(id)) {
+            resetBookForm();
+          }
+          await refreshData();
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Замовлення: рядки позицій у формі
+      // ---------------------------------------------------------------
+
+      function bookOptionsHtml() {
+        return '<option value="">— Оберіть книгу —</option>' +
+          allBooks.map((b) =>
+            `<option value="${b.id}">${escapeHtml(b.title)} — ${escapeHtml(b.author_name)} ` +
+            `(${formatPrice(b.price)} грн, залишок: ${b.stock_quantity})</option>`
+          ).join('');
+      }
+
+      function itemRows() {
+        return Array.from(orderItems.querySelectorAll('.order-row'));
+      }
+
+      function addItemRow(bookId) {
+        const row = document.createElement('div');
+        row.className = 'order-row border rounded p-2 mb-2';
+        row.innerHTML = `
+          <div class="mb-2">
+            <select class="form-select form-select-sm item-book" required>${bookOptionsHtml()}</select>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <input type="number" class="form-control form-control-sm item-qty"
+                   min="1" step="1" value="1" required style="max-width: 90px;"
+                   title="Кількість не може перевищувати залишок на складі">
+            <span class="text-muted small ms-auto item-sum">0,00 грн</span>
+            <button type="button" class="btn btn-sm btn-outline-danger item-remove" title="Прибрати позицію">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        `;
+        orderItems.appendChild(row);
+
+        if (bookId) {
+          row.querySelector('.item-book').value = String(bookId);
+        }
+        syncOrderRows();
+      }
+
+      // Перебудова списків книг у наявних рядках (після оновлення даних)
+      function rebuildRowOptions() {
+        itemRows().forEach((row) => {
+          const select = row.querySelector('.item-book');
+          const previous = select.value;
+          select.innerHTML = bookOptionsHtml();
+          const book = bookById(previous);
+          select.value = book && book.stock_quantity > 0 ? previous : '';
+        });
+        syncOrderRows();
+      }
+
+      // Синхронізація: заборона дублів, ліміти кількості, суми
+      function syncOrderRows() {
+        const rows = itemRows();
+        const chosen = rows.map((r) => r.querySelector('.item-book').value);
+        let total = 0;
+
+        rows.forEach((row, index) => {
+          const select = row.querySelector('.item-book');
+          const qtyInput = row.querySelector('.item-qty');
+
+          Array.from(select.options).forEach((option) => {
+            if (!option.value) {
+              return;
+            }
+            const book = bookById(option.value);
+            const takenElsewhere = chosen.some((v, i) => i !== index && v === option.value);
+            option.disabled = takenElsewhere || !book || book.stock_quantity === 0;
+          });
+
+          const book = bookById(select.value);
+          let lineTotal = 0;
+
+          if (book) {
+            qtyInput.max = book.stock_quantity;
+            const qty = Number(qtyInput.value);
+            lineTotal = Number.isFinite(qty) && qty > 0 ? book.price * qty : 0;
+          } else {
+            qtyInput.removeAttribute('max');
+          }
+
+          total += lineTotal;
+          row.querySelector('.item-sum').textContent = `${formatPrice(lineTotal)} грн`;
+          row.querySelector('.item-remove').disabled = rows.length === 1;
+        });
+
+        orderTotal.textContent = `${formatPrice(total)} грн`;
+      }
+
+      function resetOrderForm() {
+        orderForm.reset();
+        orderForm.classList.remove('was-validated');
+        orderItems.innerHTML = '';
+        addItemRow();
+      }
+
+      function orderFromBook(bookId) {
+        const rows = itemRows();
+        const alreadyChosen = rows.some((r) => r.querySelector('.item-book').value === String(bookId));
+
+        if (!alreadyChosen) {
+          const emptyRow = rows.find((r) => !r.querySelector('.item-book').value);
+          if (emptyRow) {
+            emptyRow.querySelector('.item-book').value = String(bookId);
+            syncOrderRows();
+          } else {
+            addItemRow(bookId);
+          }
+        }
+
+        orderForm.classList.remove('was-validated');
+        bootstrap.Tab.getOrCreateInstance($('ordersTabBtn')).show();
+      }
+
+      // ---------------------------------------------------------------
+      // Замовлення: список та оформлення
+      // ---------------------------------------------------------------
+
+      function renderOrders() {
+        ordersCountBadge.textContent = orders.length;
+
+        if (orders.length === 0) {
+          ordersTableBody.innerHTML =
+            '<tr><td colspan="6" class="text-center text-muted py-4">' +
+            '<i class="bi bi-inbox fs-3 d-block mb-1"></i>Замовлень ще немає</td></tr>';
+          return;
+        }
+
+        ordersTableBody.innerHTML = orders.map((o) => {
+          const status = STATUS_LABELS[o.status] || [o.status, 'text-bg-light'];
+          const items = (o.items || []).map((i) =>
+            `<div>${escapeHtml(i.title)} <span class="text-muted">× ${escapeHtml(i.quantity)}</span></div>`
+          ).join('');
+
+          return `
+            <tr>
+              <td>${o.id}</td>
+              <td class="text-nowrap">${escapeHtml(formatDate(o.order_date))}</td>
+              <td>${escapeHtml(o.customer_name)}</td>
+              <td class="small">${items}</td>
+              <td><span class="badge ${status[1]}">${escapeHtml(status[0])}</span></td>
+              <td class="text-end fw-semibold">${formatPrice(o.total_amount)}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      async function loadOrders() {
+        try {
+          orders = await request(`${API_URL}/orders`);
+          renderOrders();
+          rebuildDerivedNotifications();
+        } catch (err) {
+          ordersTableBody.innerHTML =
+            '<tr><td colspan="6" class="text-center text-danger py-4">' +
+            'Помилка завантаження замовлень</td></tr>';
+          showToast(err.message, 'error');
+        }
+      }
+
+      async function handleOrderSubmit(event) {
+        event.preventDefault();
+        syncOrderRows();
+
+        if (!orderForm.checkValidity()) {
+          orderForm.classList.add('was-validated');
+          showToast('Перевірте клієнта, книги та кількість (не більше залишку на складі)', 'error');
+          return;
+        }
+
+        const payload = {
+          customer_id: Number(orderCustomer.value),
+          items: itemRows().map((row) => ({
+            book_id: Number(row.querySelector('.item-book').value),
+            quantity: Number(row.querySelector('.item-qty').value),
+          })),
+        };
+
+        orderBtn.disabled = true;
+        try {
+          const order = await request(`${API_URL}/orders`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          });
+
+          showToast(`Замовлення №${order.id} оформлено`, 'success');
+          addEvent('success',
+            `Оформлено замовлення №${order.id} для ${order.customer_name} ` +
+            `на суму ${formatPrice(order.total_amount)} грн`);
+
+          resetOrderForm();
+          await refreshData();
+        } catch (err) {
+          showToast(err.message, 'error');
+          await refreshData().catch(() => {});
+        } finally {
+          orderBtn.disabled = false;
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Новий клієнт (модальне вікно)
+      // ---------------------------------------------------------------
+
+      function openCustomerModal() {
+        customerForm.reset();
+        customerForm.classList.remove('was-validated');
+        hideInlineError(customerError);
+        customerModal.show();
+      }
+
+      async function handleCustomerSubmit(event) {
+        event.preventDefault();
+        hideInlineError(customerError);
+
+        if (!customerForm.checkValidity()) {
+          customerForm.classList.add('was-validated');
+          return;
+        }
+
+        saveCustomerBtn.disabled = true;
+        try {
+          const customer = await request(`${API_URL}/customers`, {
+            method: 'POST',
+            body: JSON.stringify({
+              full_name: custName.value.trim(),
+              phone: custPhone.value.trim(),
+              email: custEmail.value.trim(),
+              address: custAddress.value.trim(),
+            }),
+          });
+
+          await loadCustomers(customer.id);
+          customerModal.hide();
+          showToast(`Клієнта «${customer.full_name}» додано`, 'success');
+          addEvent('success', `Додано нового клієнта «${customer.full_name}»`);
+        } catch (err) {
+          showInlineError(customerError, err.message);
+        } finally {
+          saveCustomerBtn.disabled = false;
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Оновлення всіх даних
+      // ---------------------------------------------------------------
+
+      async function refreshData() {
+        try {
+          await loadAllBooks();
+        } catch (err) {
+          showToast(err.message, 'error');
+          return;
+        }
+        await Promise.all([loadBooks(), loadOrders(), loadStats()]);
+      }
+
+      // ---------------------------------------------------------------
+      // Обробники подій
+      // ---------------------------------------------------------------
+
+      loginForm.addEventListener('submit', handleLogin);
+      registerForm.addEventListener('submit', handleRegister);
+      regPassword.addEventListener('input', checkPasswordMatch);
+      regPassword2.addEventListener('input', checkPasswordMatch);
+      logoutBtn.addEventListener('click', handleLogout);
+
+      bookForm.addEventListener('submit', handleBookSubmit);
+      cancelBtn.addEventListener('click', resetBookForm);
+      authorSelect.addEventListener('change', updateAuthorHint);
+      newAuthorBtn.addEventListener('click', openNewAuthorModal);
+      newAuthorForm.addEventListener('submit', handleNewAuthorSubmit);
+      newAuthorModalEl.addEventListener('shown.bs.modal', () => newAuthorFirstName.focus());
+
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(loadBooks, 300);
+      });
+
+      booksTableBody.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button || button.disabled) {
+          return;
+        }
+
+        const id = Number(button.dataset.id);
+        const action = button.dataset.action;
+
+        if (action === 'edit') {
+          startEdit(id);
+        } else if (action === 'delete') {
+          deleteBook(id);
+        } else if (action === 'order') {
+          orderFromBook(id);
+        } else if (action === 'author') {
+          showAuthorInfo(id);
+        }
+      });
+
+      orderForm.addEventListener('submit', handleOrderSubmit);
+      addItemBtn.addEventListener('click', () => addItemRow());
+      newCustomerBtn.addEventListener('click', openCustomerModal);
+      customerForm.addEventListener('submit', handleCustomerSubmit);
+
+      orderItems.addEventListener('change', syncOrderRows);
+      orderItems.addEventListener('input', syncOrderRows);
+      orderItems.addEventListener('click', (event) => {
+        const button = event.target.closest('.item-remove');
+        if (!button || button.disabled) {
+          return;
+        }
+        button.closest('.order-row').remove();
+        syncOrderRows();
+      });
+
+      // ---------------------------------------------------------------
+      // Ініціалізація
+      // ---------------------------------------------------------------
+
+      (async function init() {
+        renderNotifications();
+
+        if (!token) {
+          showAuth();
+          return;
+        }
+
+        try {
+          const user = await request(`${API_URL}/me`);
+          await enterApp(user);
+        } catch (err) {
+          resetSession();
+          showAuth();
+        }
+      })();
+    })();
+  </script>
+</body>
+</html>
