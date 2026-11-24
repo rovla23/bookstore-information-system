@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev && npm cache clean --force
 
-COPY server.js models.js ./
+COPY server.js models.js init.sql ./
 COPY public ./public
 
 ENV NODE_ENV=production
