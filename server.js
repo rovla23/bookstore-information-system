@@ -810,6 +810,15 @@ let server = null;
     process.exit(1);
   }
 })();
+function shutdown() {
+  console.log('Завершення роботи сервера...');
+  if (!server) {
+    process.exit(0);
+  }
+  server.close(() => {
+    sequelize.close().finally(() => process.exit(0));
+  });
+}
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
