@@ -1,5 +1,5 @@
 'use strict';
-
+const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
@@ -794,6 +794,14 @@ let server = null;
     await sequelize.authenticate();
     console.log('Підключення до PostgreSQL через Sequelize ORM встановлено');
 
+    // Перевіряємо, чи вже створена таблиця users; якщо ні — виконуємо init.sql
+    const [tables] = await sequelize.query(`SELECT to_regclass('public.users') AS tbl;`);
+    if (!tables[0].tbl) {
+      const initSql = fs.readFileSync(path.join(__dirname, 'init.sql'), 'utf8');
+      await sequelize.query(initSql);
+      console.log('Схему бази даних та початкові дані з init.sql успішно завантажено');
+    }
+
     server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`Сервер запущено на порту ${PORT}`);
     });
@@ -802,16 +810,6 @@ let server = null;
     process.exit(1);
   }
 })();
-
-function shutdown() {
-  console.log('Завершення роботи сервера...');
-  if (!server) {
-    process.exit(0);
-  }
-  server.close(() => {
-    sequelize.close().finally(() => process.exit(0));
-  });
-}
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
